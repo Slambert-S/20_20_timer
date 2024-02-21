@@ -15,12 +15,21 @@ enum class TimerType : int {
 
 void StartTimer(TimerType timerType);
 
+/*
+* Function in charge of displaying the notification window.
+*
+* Parameter:
+* timerType : passing the TimerType of the timer that just finished, will be used to display correct text
+*             and creat the proper folowing timer.
+*
+*/
 int DisplayResourceNAMessageBox(TimerType timertype)
 {
 
-    
-    //sting change depending on the value passed
+    // Fancy string type use to display text on the pop up box
     LPCWSTR custumString = L"defaultString";
+
+    //Selecting the proper texte to use depending on the TimerType
     switch (timertype)
     {
     case TimerType::Custum:
@@ -35,16 +44,19 @@ int DisplayResourceNAMessageBox(TimerType timertype)
     default:
         break;
     }
-   
 
+    //Creating the MessageBox object and  passing the text to display
     int msgboxID = MessageBox(
         NULL,
         custumString,
         L"Time up",
-        MB_ICONWARNING | MB_OKCANCEL | MB_DEFBUTTON3
+        MB_ICONWARNING | MB_OKCANCEL | MB_DEFBUTTON3 | MB_SERVICE_NOTIFICATION
     );
 
+
+
     TimerType type = TimerType::Custum;
+    //Selecting the proper TimerType that will be created.
     switch (msgboxID)
     {
     case IDCANCEL:
@@ -72,7 +84,9 @@ int DisplayResourceNAMessageBox(TimerType timertype)
     return msgboxID;
 }
 
-bool checkForTimeleft(int &minute, int &second)
+//Helper function to check if their is time left on the timer.
+//Tranfer the minute in second and add the second to it.
+bool checkForTimeleft(int& minute, int& second)
 {
     if ((minute * 60) + second > 0) {
         return  true;
@@ -80,12 +94,13 @@ bool checkForTimeleft(int &minute, int &second)
     return false;
 }
 
-void displayTime(std::string  &minute, std::string &second, std::string &TimerName) {
+// Helper function to display the time.
+void displayTime(std::string& minute, std::string& second, std::string& TimerName) {
     std::cout << "|-- " << TimerName << " Timer --|" << std::endl;
-    std::cout <<"Time left : " << minute << " : " << second << std::endl;
+    std::cout << "Time left : " << minute << " : " << second << std::endl;
 }
 
-
+//Helper function to display number betwen 0 and 9  as 0X
 void cleanTimeText(std::string& minuteText, std::string& secondText, int secondInt, int minuteInt) {
 
     if (secondInt <= 9) {
@@ -103,32 +118,43 @@ void cleanTimeText(std::string& minuteText, std::string& secondText, int secondI
     }
 }
 
+/*
+* Function use to start a new timer.
+* Parameter:
+* timerType: use to indicate what time value and will be use as the setting of the timer.
+*/
 void StartTimer(TimerType timerType) {
     system("CLS");
     int secondSystem = 60, minuteSystem = 0;
-    std::string timerName,secondDisplay,ligne, minutesDisplay = "00";
+    std::string timerName, secondDisplay, ligne, minutesDisplay = "00";
     bool ok = false;
     int n;
-    //std::string ligne = "";
+
+
+    /*
+    * This switch statment is in charge of setting the secondSystem , minutesSystem and timerName value.
+    */
     switch (timerType)
     {
 
     case TimerType::Custum:
+
+        //Handling user input for the second | need to be x <= 59 et x >= 0
         do {
-            ok = false;      
-            while (!ok) 
+            ok = false;
+            while (!ok)
             {
                 std::cout << "Enter the number of second :: ";
                 std::getline(std::cin, ligne);
-                std::istringstream  tampon (ligne);
+                std::istringstream  tampon(ligne);
                 if (tampon >> n) {
                     if (n <= 59 && n >= 0) {
                         ok = true;
                         secondSystem = n;
                     }
                     else {
-                        std::cin.clear();    
-                    }       
+                        std::cin.clear();
+                    }
                 }
                 else {
                     ok = false;
@@ -137,21 +163,23 @@ void StartTimer(TimerType timerType) {
                 }
             };
 
-        }while(!ok);
+        } while (!ok);
 
         ok = false;
         ligne.clear();
 
+        //Handling user input for the minutes | need to be x <= 59 et x >= 0
+
         do {
             ok = false;
-            
+
             while (!ok)
             {
                 std::cout << "Enter the number of minutes :: ";
                 std::getline(std::cin, ligne);
                 std::istringstream  tampon(ligne);
                 if (tampon >> n) {
-                    if (n <= 59 && n >= 0){
+                    if (n <= 59 && n >= 0) {
                         ok = true;
                         minuteSystem = n;
                     }
@@ -166,16 +194,20 @@ void StartTimer(TimerType timerType) {
 
             };
         } while (!ok);
- 
+
+        //Reciving the timer name from the user , no need to handle the user input.
         std::cout << "Enter timer's name :";
         std::getline(std::cin, timerName);
 
         break;
+        // setting the value for the 20 minutes timer
     case TimerType::longer:
         secondSystem = 0;
         minuteSystem = 20;
         timerName = "20 Minute";
         break;
+
+        //setting the value for the 20 second timer
     case TimerType::shorter:
         secondSystem = 20;
         minuteSystem = 0;
@@ -187,14 +219,19 @@ void StartTimer(TimerType timerType) {
 
     //Timer countdown star here
     bool timeRemaining = false;
+
+    // Chekking if the time is not empty
     timeRemaining = checkForTimeleft(minuteSystem, secondSystem);
 
+
+    // countdown timer logic
     while (timeRemaining) {
 
         system("CLS"); // clear the screen
         cleanTimeText(minutesDisplay, secondDisplay, secondSystem, minuteSystem);
-        displayTime(minutesDisplay, secondDisplay,timerName);
+        displayTime(minutesDisplay, secondDisplay, timerName);
 
+        //handle minute and second changing
         secondSystem--;
         if (secondSystem < 0) {
             if (minuteSystem >= 1) {
@@ -209,6 +246,9 @@ void StartTimer(TimerType timerType) {
     //Sleep(5000); // stop the system for 5 second
     system("CLS"); // clear the screen
     std::cout << "TimerEnded";
+
+    //Open the message box to inform the user the timer is over
+    //Passing the current TimerType to allow the code to start the folowing timer.
     DisplayResourceNAMessageBox(timerType);
 
 
@@ -217,6 +257,7 @@ void StartTimer(TimerType timerType) {
 
 int main()
 {
+    // Main loop to allow the user to go back to the main menu and start a different timer.
     bool masterBool = false;
     while (masterBool == false) {
 
@@ -227,11 +268,13 @@ int main()
         std::cout << "| 3 - Exit\n";
 
         int input = 0;
-      
+
         bool ok = false;
         int valeur;
         std::string ligne;
 
+        //Handling user input validation.
+        //Making sure the value is 1 or 2 or 3 or 4 (secret timer)
         do {
             ok = false;
 
@@ -260,6 +303,7 @@ int main()
 
         TimerType timerType = TimerType::Custum;
 
+        //using the int value from the user to set the proper TimerType
         switch (input)
         {
         case 1:
